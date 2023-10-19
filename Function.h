@@ -28,7 +28,7 @@ struct SafeZone {
 };
 
 struct Enemy {
-	Vector2 position;
+	Vector2f position;
 	float size;
 	int remain;
 	bool isAlive;
@@ -70,20 +70,6 @@ bool Collision(Player player, SafeZone safeZone) {
 	return false;
 
 }
-bool Collision(Player player, Enemy enemy) {
-	float x = 0.0f;
-	float y = 0.0f;
-
-	x = ((player.position.x + 8 + player.size / 2.0f) - (enemy.position.x + 8 + enemy.size / 2.0f));
-	y = ((player.position.y + 8 + player.size / 2.0f) - (enemy.position.y + 8 + enemy.size / 2.0f));
-
-	if ((player.size / 2.0f + enemy.size / 2.0f) * (player.size / 2.0f + enemy.size / 2.0f) >= x * x + y * y) {
-		return true;
-	}
-
-	return false;
-
-}
 
 /// <summary>
 /// 浮島、落とし穴の代入
@@ -116,6 +102,73 @@ void Assignment(Enemy &enemy1, Enemy &enemy2) {
 /// <param name="obj1"></param>
 /// <param name="obj2"></param>
 /// <returns></returns>
-float CrossProduct(Vector2 const& obj1, Vector2 const& obj2) {
+float CrossProduct(Vector2f const& obj1, Vector2f const& obj2) {
 	return obj1.x * obj2.y - obj1.y * obj2.x;
+}
+
+
+/// <summary>
+/// 最短距離
+/// </summary>
+/// <param name="obj"></param>
+/// <returns></returns>
+float Length(Vector2f const& obj) {
+	return sqrtf(obj.x * obj.x + obj.y * obj.y);
+}
+
+/// <summary>
+/// 正規化
+/// </summary>
+/// <param name="obj"></param>
+/// <returns></returns>
+Vector2f Normalize(Vector2f const& obj) {
+	float length = 0;
+	Vector2f newObj = {};
+
+	length = Length(obj);
+
+	newObj.x = obj.x;
+	newObj.y = obj.y;
+
+	if (length != 0.0f) {
+		newObj.x = obj.x / length;
+		newObj.y = obj.y / length;
+	}
+	return newObj;
+}
+
+
+Vector2f Collision(Player player, Enemy enemy) {
+	Vector2f contactPoint = {};
+	Vector2f norlmalVector = {};
+	Vector2f directionVector = {};
+	Vector2f result = {};
+	
+	float x = 0.0f;
+	float y = 0.0f;
+
+	x = ((player.position.x + 8 + player.size / 2.0f) - (enemy.position.x + 8 + enemy.size / 2.0f));
+	y = ((player.position.y + 8 + player.size / 2.0f) - (enemy.position.y + 8 + enemy.size / 2.0f));
+
+	if ((player.size / 2.0f + enemy.size / 2.0f) * (player.size / 2.0f + enemy.size / 2.0f) >= x * x + y * y) {
+		contactPoint.x = player.position.x - enemy.position.x;
+		contactPoint.y = player.position.y - enemy.position.y;
+		contactPoint = Normalize(contactPoint);
+		contactPoint.x = contactPoint.x * (enemy.size / 2);
+		contactPoint.y = contactPoint.y * (enemy.size / 2);
+
+		norlmalVector.x = contactPoint.x - enemy.position.x;
+		norlmalVector.y = contactPoint.y - enemy.position.y;
+		norlmalVector = Normalize(norlmalVector);
+
+		directionVector = Normalize(player.speed);
+
+		result.x = -directionVector.x + 2 * norlmalVector.x * (norlmalVector.x * directionVector.x);
+		result.y = -directionVector.y + 2 * norlmalVector.y * (norlmalVector.y * directionVector.y);
+
+		return result;
+
+	}
+	result = { 0,0 };
+	return result;
 }

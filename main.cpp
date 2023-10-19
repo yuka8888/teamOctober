@@ -186,7 +186,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		kPitFallSizeBig
 	};
 
-	
+	Vector2f reflection = {};
 
 	//プログラムで使うステージの落とし穴の数
 	int pitFallNum = kPitFall3_1;
@@ -268,24 +268,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					for (int i = 0; i < enemyNum; i++) {
 
 						//プレイヤーが敵にあったか
-						if (Collision(player, enemy2_1[i]) == true) {
+						reflection = Collision(player, enemy2_1[i]);
 
-							//上下左右どの方向からあたったか
-							if (player.position.y < enemy2_1[i].position.y + enemy2_1[i].size - 8 || player.position.y + player.size > enemy2_1[i].position.y + 8) {
-								player.speed.y *= -1;
-								player.acceleration.y += -1;
-								enemy[i].remain--;
-							}
-							else if (player.position.x < enemy2_1[i].position.x + enemy2_1[i].size - 8 || player.position.x + player.size > enemy2_1[i].position.x + 8) {
-								player.speed.x *= -1;
-								player.acceleration.x += -1;
-								enemy[i].remain--;
-							}
+						if (reflection.x != 0) {
+							player.speed.x = reflection.x * 4;
+							player.speed.y = reflection.y * 4;
+							player.acceleration.x = float(cos(thetaCount * M_PI)) * -1.0f;
+							player.acceleration.y = float(sin(thetaCount * M_PI)) * -1.0f;
+						}
 
-							//残機があるか
-							if (enemy[i].remain < 0) {
-								enemy[i].isAlive = false;
-							}
+						//残機があるか
+						if (enemy[i].remain < 0) {
+							enemy[i].isAlive = false;
 						}
 					}
 				}
@@ -411,8 +405,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						//敵
 					case S2_1:
 						for (int i = 0; i < kEnemyNumS2_1; i++) {
-							Novice::DrawSprite(enemy2_1[i].position.x, enemy2_1[i].position.y, enemyTexture[0], 1.0f, 1.0f, 0.0f, WHITE);
-							Novice::DrawEllipse(enemy2_1[i].position.x + int(enemy2_1[i].size / 2), enemy2_1[i].position.y + int(enemy2_1[i].size / 2), int(enemy2_1[i].size / 2), int(enemy2_1[i].size / 2) , 0.0f,RED,kFillModeWireFrame);
+							Novice::DrawSprite(int(enemy2_1[i].position.x), int(enemy2_1[i].position.y), enemyTexture[0], 1.0f, 1.0f, 0.0f, WHITE);
+							Novice::DrawEllipse(int(enemy2_1[i].position.x + enemy2_1[i].size / 2), int(enemy2_1[i].position.y + enemy2_1[i].size / 2), int(enemy2_1[i].size / 2), int(enemy2_1[i].size / 2) , 0.0f,RED,kFillModeWireFrame);
 
 							for (int j = 0; j < 8; j++) {
 								Novice::DrawLine(int(enemy2_1[i].linePosition[j].x), int(enemy2_1[i].linePosition[j].y), int(enemy2_1[i].linePosition[(j + 1) % 8].x), int(enemy2_1[i].linePosition[(j + 1) % 8].y), WHITE);
