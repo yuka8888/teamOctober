@@ -186,7 +186,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		kPitFallSizeBig
 	};
 
-	Vector2f reflection = {};
+	float reflection = {};
 
 	//プログラムで使うステージの落とし穴の数
 	int pitFallNum = kPitFall3_1;
@@ -270,11 +270,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						//プレイヤーが敵にあったか
 						reflection = Collision(player, enemy2_1[i]);
 
-						if (reflection.x != 0) {
-							player.speed.x = reflection.x * 4;
-							player.speed.y = reflection.y * 4;
-							player.acceleration.x = float(cos(thetaCount * M_PI)) * -1.0f;
-							player.acceleration.y = float(sin(thetaCount * M_PI)) * -1.0f;
+						if (reflection != 0) {
+							ToDegree(reflection);
+							
+							player.speed.x = cosf(reflection) * 5;
+							player.speed.y = sinf(reflection) * 5;
+							player.acceleration.x = cosf(reflection) * -1.0f;
+							player.acceleration.y = sinf(reflection) * -1.0f;
 						}
 
 						//残機があるか
@@ -325,14 +327,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						thetaCount = 0.0f;
 					}
 
-					aimPosition.x = float(cos(thetaCount * M_PI)) * 100;
-					aimPosition.y = float(sin(thetaCount * M_PI)) * 100;
+					aimPosition.x = cosf(thetaCount * float(M_PI)) * 100;
+					aimPosition.y = sinf(thetaCount * float(M_PI)) * 100;
 					//スペースキーを押したら方向を決める
 					if (keys[DIK_SPACE] && preKeys[DIK_SPACE] == 0) {
-						player.speed.x = float(cos(thetaCount * M_PI)) * 5.0f;
-						player.speed.y = float(sin(thetaCount * M_PI)) * 5.0f;
-						player.acceleration.x = float(cos(thetaCount * M_PI)) * -1.0f;
-						player.acceleration.y = float(sin(thetaCount * M_PI)) * -1.0f;
+						player.speed.x = cosf(thetaCount * float(M_PI)) * 5.0f;
+						player.speed.y = sinf(thetaCount * float(M_PI)) * 5.0f;
+						player.acceleration.x = cosf(thetaCount * float(M_PI)) * -1.0f;
+						player.acceleration.y = sinf(thetaCount * float(M_PI)) * -1.0f;
 						isDirectionMater = false;
 						isSpeedMater = true;
 					}

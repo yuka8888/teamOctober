@@ -138,11 +138,14 @@ Vector2f Normalize(Vector2f const& obj) {
 }
 
 
-Vector2f Collision(Player player, Enemy enemy) {
+float Collision(Player player, Enemy enemy) {
+	//接地点
 	Vector2f contactPoint = {};
+	//法線ベクトル
 	Vector2f norlmalVector = {};
 	Vector2f directionVector = {};
-	Vector2f result = {};
+	float result = 0.0f;
+	Vector2f reflection = {};
 	
 	float x = 0.0f;
 	float y = 0.0f;
@@ -163,12 +166,18 @@ Vector2f Collision(Player player, Enemy enemy) {
 
 		directionVector = Normalize(player.speed);
 
-		result.x = -directionVector.x + 2 * norlmalVector.x * (norlmalVector.x * directionVector.x);
-		result.y = -directionVector.y + 2 * norlmalVector.y * (norlmalVector.y * directionVector.y);
+		reflection.x = -directionVector.x + 2 * norlmalVector.x * (norlmalVector.x * norlmalVector.x + directionVector.x * directionVector.x);
+		reflection.y = -directionVector.y + 2 * norlmalVector.y * (norlmalVector.y * norlmalVector.y + directionVector.y * directionVector.y);
+
+		result = (reflection.x * 1.0f + reflection.y * 0.0f) / sqrtf(reflection.x * reflection.x + reflection.y * reflection.y) * sqrtf(1.0f * 1.0f + 0.0f * 0.0f);
 
 		return result;
 
 	}
-	result = { 0,0 };
+	result = 0.0f;
 	return result;
+}
+
+int ToDegree(float radian) {
+	return (int)(radian * 180.0f / M_PI);
 }
