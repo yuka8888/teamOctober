@@ -1,4 +1,5 @@
 ﻿#pragma once
+#define PLAYER_PIXCEL_OFFSET 16.0f
 
 struct Vector2 {
 	int x;
@@ -19,6 +20,7 @@ struct Player {
 	bool isMove;
 	bool isCollision;
 	int remain;
+	int radius = 24;
 };
 
 
@@ -33,6 +35,7 @@ struct Enemy {
 	int remain;
 	bool isAlive;
 	Vector2f linePosition[8];
+	int radius = 32;
 };
 
 
@@ -60,8 +63,8 @@ bool Collision(Player player, SafeZone safeZone) {
 	float x = 0.0f;
 	float y = 0.0f;
 
-	x = ((player.position.x + 8 + player.size / 2.0f) - (safeZone.position.x + 8 + safeZone.size / 2.0f));
-	y = ((player.position.y + 8 + player.size / 2.0f) - (safeZone.position.y + 8 + safeZone.size / 2.0f));
+	x = ((player.position.x + player.size / 2.0f) - (safeZone.position.x + safeZone.size / 2.0f));
+	y = ((player.position.y + player.size / 2.0f) - (safeZone.position.y + safeZone.size / 2.0f));
 
 	if ((player.size / 2.0f + safeZone.size / 2.0f) * (player.size / 2.0f + safeZone.size / 2.0f) >= x * x + y * y) {
 		return true;
@@ -77,7 +80,7 @@ bool Collision(Player player, SafeZone safeZone) {
 /// <param name="safeZone1">書き換わる変数</param>
 /// <param name="safeZone2">代入したい変数</param>
 /// <returns></returns>
-void Assignment(SafeZone &safeZone1, SafeZone &safeZone2) {
+void Assignment(SafeZone& safeZone1, SafeZone& safeZone2) {
 	safeZone1.position.x = safeZone2.position.x;
 	safeZone1.position.y = safeZone2.position.y;
 	safeZone1.size = safeZone2.size;
@@ -88,7 +91,7 @@ void Assignment(SafeZone &safeZone1, SafeZone &safeZone2) {
 /// </summary>
 /// <param name="enemy1">書き換わる変数</param>
 /// <param name="enemy2">代入したい変数</param>
-void Assignment(Enemy &enemy1, Enemy &enemy2) {
+void Assignment(Enemy& enemy1, Enemy& enemy2) {
 	enemy1.isAlive = enemy2.isAlive;
 	enemy1.position.x = enemy2.position.x;
 	enemy1.position.y = enemy2.position.y;
@@ -104,6 +107,16 @@ void Assignment(Enemy &enemy1, Enemy &enemy2) {
 /// <returns></returns>
 float CrossProduct(Vector2f const& obj1, Vector2f const& obj2) {
 	return obj1.x * obj2.y - obj1.y * obj2.x;
+}
+
+/// <summary>
+/// 内積
+/// </summary>
+/// <param name="obj1"></param>
+/// <param name="obj2"></param>
+/// <returns></returns>
+float Dot(Vector2f const& obj1, Vector2f const& obj2) {
+	return obj1.x * obj2.x + obj1.y * obj2.y;
 }
 
 
@@ -138,44 +151,91 @@ Vector2f Normalize(Vector2f const& obj) {
 }
 
 
-float Collision(Player player, Enemy enemy) {
+Vector2f PushBack(Player player, Enemy enemy) {
 	//接地点
 	Vector2f contactPoint = {};
 	//法線ベクトル
 	Vector2f norlmalVector = {};
 	Vector2f directionVector = {};
-	float result = 0.0f;
+	//float result = 0.0f;
 	Vector2f reflection = {};
-	
+
 	float x = 0.0f;
 	float y = 0.0f;
 
-	x = ((player.position.x + 8 + player.size / 2.0f) - (enemy.position.x + 8 + enemy.size / 2.0f));
-	y = ((player.position.y + 8 + player.size / 2.0f) - (enemy.position.y + 8 + enemy.size / 2.0f));
+	x = (player.position.x) - (enemy.position.x);
+	y = (player.position.y) - (enemy.position.y);
+	Length({ x,y });
 
-	if ((player.size / 2.0f + enemy.size / 2.0f) * (player.size / 2.0f + enemy.size / 2.0f) >= x * x + y * y) {
-		contactPoint.x = player.position.x - enemy.position.x;
-		contactPoint.y = player.position.y - enemy.position.y;
-		contactPoint = Normalize(contactPoint);
-		contactPoint.x = contactPoint.x * (enemy.size / 2);
-		contactPoint.y = contactPoint.y * (enemy.size / 2);
+	if (Length({ x,y }) <= player.radius + enemy.radius) {
 
-		norlmalVector.x = contactPoint.x - enemy.position.x;
-		norlmalVector.y = contactPoint.y - enemy.position.y;
-		norlmalVector = Normalize(norlmalVector);
+		//当たる前の座標に戻す
+		player.position.x -= player.speed.x;
+		player.position.y -= player.speed.y;
 
-		directionVector = Normalize(player.speed);
+		directionVector.x = player.position.x - enemy.position.x;
+		directionVector.y = player.position.y - enemy.position.y;
+		directionVector = Normalize(directionVector);
 
-		reflection.x = -directionVector.x + 2 * norlmalVector.x * (norlmalVector.x * norlmalVector.x + directionVector.x * directionVector.x);
-		reflection.y = -directionVector.y + 2 * norlmalVector.y * (norlmalVector.y * norlmalVector.y + directionVector.y * directionVector.y);
+		contactPoint.x = directionVector.x * (enemy.radius) + enemy.position.x;
+		contactPoint.y = directionVector.y * (enemy.radius) + enemy.position.y;
 
-		result = (reflection.x * 1.0f + reflection.y * 0.0f) / sqrtf(reflection.x * reflection.x + reflection.y * reflection.y) * sqrtf(1.0f * 1.0f + 0.0f * 0.0f);
+		player.position.x = contactPoint.x + directionVector.x * (player.radius);
+		player.position.y = contactPoint.y + directionVector.y * (player.radius);
 
-		return result;
+		//norlmalVector.x = contactPoint.x - enemy.position.x;
+		//norlmalVector.y = contactPoint.y - enemy.position.y;
+		//norlmalVector = Normalize(norlmalVector);
+
+		//directionVector = Normalize(player.speed);
+
+		//reflection.x = -directionVector.x + 2 * norlmalVector.x * Dot(norlmalVector, directionVector);
+		//reflection.y = -directionVector.y + 2 * norlmalVector.y * Dot(norlmalVector, directionVector);
+
+		return player.position;
 
 	}
-	result = 0.0f;
-	return result;
+	reflection = { 0.0f,0.0f };
+	return reflection;
+}
+
+float ReflectionVector(Player player, Enemy enemy, float angle) {
+	Vector2f directionVector = {};
+	Vector2f Oligin = { 1.0f, 0.0f };
+	Vector2f provisionalPosition = {};
+	float theta = 0.0f;
+
+	directionVector.x = player.position.x - enemy.position.x;
+	directionVector.y = player.position.y - enemy.position.y;
+	directionVector = Normalize(directionVector);
+
+	if (player.position.y >= enemy.position.y + enemy.size / 2) {
+		Oligin = { -1.0f, 0.0f };
+	}
+	Length(directionVector);
+	Length(Oligin);
+	theta = Dot(player.speed, Oligin) / (Length(player.speed) * Length(Oligin));
+
+	theta += angle;
+
+	provisionalPosition.x = player.position.x + (cosf(theta * 3.1415f) * (player.size / 2.0f));
+	provisionalPosition.y = player.position.y + (sinf(theta * 3.1415f) * (player.size / 2.0f));
+
+	float x = ((provisionalPosition.x + player.size / 2.0f) - (enemy.position.x + enemy.size / 2.0f));
+	float y = ((provisionalPosition.y + player.size / 2.0f) - (enemy.position.y + enemy.size / 2.0f));
+
+	if ((player.size / 2.0f + enemy.size / 2.0f) * (player.size / 2.0f + enemy.size / 2.0f) >= x * x + y * y) {
+		theta -= angle * 2;
+
+		return theta;
+	}
+
+	return theta;
+
+}
+
+float Angle(Vector2f reflection) {
+	return (reflection.x * 1.0f + reflection.y * 0.0f) / sqrtf(reflection.x * reflection.x + reflection.y * reflection.y) * sqrtf(1.0f * 1.0f + 0.0f * 0.0f);
 }
 
 int ToDegree(float radian) {

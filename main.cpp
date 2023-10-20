@@ -3,6 +3,8 @@
 #include <math.h>
 #include <Function.h>
 
+
+
 const char kWindowTitle[] = "GC1A_03_オノセ_ユウカ";
 
 //ウィンドウサイズ
@@ -140,7 +142,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	{200, 500},
 	kSafeZoneSizeBig
 	};
-	
+
 	//プログラムで使うステージの浮島の数
 	int safeZoneNum = kSafeZoneNum1_1;
 
@@ -186,7 +188,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		kPitFallSizeBig
 	};
 
-	float reflection = {};
+	Vector2f reflection = {};
 
 	//プログラムで使うステージの落とし穴の数
 	int pitFallNum = kPitFall3_1;
@@ -208,6 +210,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	};
 
 	float theta;
+	Vector2f provisionalPosition = {};
 
 	for (int i = 0; i < 8; i++) {
 		theta = 2.0f / 8.0f * i * 3.14f;
@@ -237,7 +240,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓更新処理ここから
 		///
-		
+
 		switch (scene) {
 			case TITLE:
 				break;
@@ -268,15 +271,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					for (int i = 0; i < enemyNum; i++) {
 
 						//プレイヤーが敵にあったか
-						reflection = Collision(player, enemy2_1[i]);
+						provisionalPosition = PushBack(player, enemy2_1[i]);
 
-						if (reflection != 0) {
-							ToDegree(reflection);
-							
-							player.speed.x = cosf(reflection) * 5;
-							player.speed.y = sinf(reflection) * 5;
-							player.acceleration.x = cosf(reflection) * -1.0f;
-							player.acceleration.y = sinf(reflection) * -1.0f;
+						if (provisionalPosition.x != 0) {
+							player.position.x = provisionalPosition.x;
+
+							//thetaCount = ReflectionVector(player, enemy2_1[i], 0.25f);
+							player.position.y = provisionalPosition.y;
+							//player.speed.x = cosf(theta * float(M_PI)) * 10;
+							//player.speed.y = sinf(theta * float(M_PI)) * 10;
+							//player.acceleration.x = -cosf(theta * float(M_PI));
+							//player.acceleration.y = -sinf(theta * float(M_PI));
+
+							player.speed.x = 0.0f;
+							player.speed.y = 0.0f;
+							player.acceleration.x = 0.0f;
+							player.acceleration.y = 0.0f;
+							provisionalPosition = { 0.0f,0.0f };
 						}
 
 						//残機があるか
@@ -348,7 +359,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					player.speed.y += player.acceleration.y;
 
 					//加速度が小さくなったら動きを止める
-					if (player.acceleration.x < 0) {
+					if (player.acceleration.x <= 0) {
 						if (player.speed.x <= 0.0f) {
 							player.speed.x = 0.0f;
 							player.speed.y = 0.0f;
@@ -383,7 +394,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓描画処理ここから
 		///
-		
+
 		switch (scene) {
 			case TITLE:
 				break;
@@ -407,8 +418,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						//敵
 					case S2_1:
 						for (int i = 0; i < kEnemyNumS2_1; i++) {
-							Novice::DrawSprite(int(enemy2_1[i].position.x), int(enemy2_1[i].position.y), enemyTexture[0], 1.0f, 1.0f, 0.0f, WHITE);
-							Novice::DrawEllipse(int(enemy2_1[i].position.x + enemy2_1[i].size / 2), int(enemy2_1[i].position.y + enemy2_1[i].size / 2), int(enemy2_1[i].size / 2), int(enemy2_1[i].size / 2) , 0.0f,RED,kFillModeWireFrame);
+							Novice::DrawSprite(int(enemy2_1[i].position.x - enemy2_1[i].radius), int(enemy2_1[i].position.y - enemy2_1[i].radius), enemyTexture[0], 1.0f, 1.0f, 0.0f, WHITE);
+							Novice::DrawEllipse(int(enemy2_1[i].position.x), int(enemy2_1[i].position.y ), int(enemy2_1[i].size / 2), int(enemy2_1[i].size / 2), 0.0f, RED, kFillModeWireFrame);
 
 							for (int j = 0; j < 8; j++) {
 								Novice::DrawLine(int(enemy2_1[i].linePosition[j].x), int(enemy2_1[i].linePosition[j].y), int(enemy2_1[i].linePosition[(j + 1) % 8].x), int(enemy2_1[i].linePosition[(j + 1) % 8].y), WHITE);
@@ -426,12 +437,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				//プレイヤー
 				if (player.isAlive == true) {
 					if (isGoal == true) {
-						Novice::DrawSprite(int(player.position.x), int(player.position.y), playerFrontTexture[0], 1.0f, 1.0f, 0.0f, BLUE);
+						Novice::DrawSprite(int(player.position.x - (player.size) / 2.0f), int(player.position.y - (player.size) / 2.0f), playerFrontTexture[0], 1.0f, 1.0f, 0.0f, BLUE);
 					}
 					else {
-						Novice::DrawSprite(int(player.position.x), int(player.position.y), playerFrontTexture[0], 1.0f, 1.0f, 0.0f, WHITE);
-						Novice::DrawEllipse(int(player.position.x) + 8 + player.size / 2, int(player.position.y) + 8 + player.size / 2, player.size / 2, player.size / 2, 0.0f, RED, kFillModeWireFrame);
+						Novice::DrawSprite(int(player.position.x - (player.size) / 2.0f), int(player.position.y - (player.size) / 2.0f), playerFrontTexture[0], 1.0f, 1.0f, 0.0f, WHITE);
+						Novice::DrawLine(int(player.position.x), int(player.position.y), int(player.position.x + reflection.x * 50), int(player.position.y + reflection.y * 50), RED);
+						Novice::DrawEllipse(int(player.position.x), int(player.position.y), player.size / 2, player.size / 2, 0.0f, RED, kFillModeWireFrame);
 					}
+
 				}
 
 				break;
