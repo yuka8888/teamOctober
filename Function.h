@@ -1,5 +1,5 @@
 ﻿#pragma once
-#define PLAYER_PIXCEL_OFFSET 16.0f
+#define PLAYER_PIXCEL_OFFSET 8.0f
 
 struct Vector2 {
 	int x;
@@ -63,10 +63,10 @@ bool Collision(Player player, SafeZone safeZone) {
 	float x = 0.0f;
 	float y = 0.0f;
 
-	x = ((player.position.x + player.size / 2.0f) - (safeZone.position.x + safeZone.size / 2.0f));
-	y = ((player.position.y + player.size / 2.0f) - (safeZone.position.y + safeZone.size / 2.0f));
+	x = player.position.x - safeZone.position.x;
+	y = player.position.y - safeZone.position.y;
 
-	if ((player.size / 2.0f + safeZone.size / 2.0f) * (player.size / 2.0f + safeZone.size / 2.0f) >= x * x + y * y) {
+	if ((player.radius+ safeZone.size / 2.0f) * (player.radius + safeZone.size / 2.0f) >= x * x + y * y) {
 		return true;
 	}
 
@@ -150,7 +150,12 @@ Vector2f Normalize(Vector2f const& obj) {
 	return newObj;
 }
 
-
+/// <summary>
+/// 敵の押し戻し処理
+/// </summary>
+/// <param name="player"></param>
+/// <param name="enemy"></param>
+/// <returns></returns>
 Vector2f PushBack(Player player, Enemy enemy) {
 	//接地点
 	Vector2f contactPoint = {};
@@ -180,8 +185,8 @@ Vector2f PushBack(Player player, Enemy enemy) {
 		contactPoint.x = directionVector.x * (enemy.radius) + enemy.position.x;
 		contactPoint.y = directionVector.y * (enemy.radius) + enemy.position.y;
 
-		player.position.x = contactPoint.x + directionVector.x * (player.radius);
-		player.position.y = contactPoint.y + directionVector.y * (player.radius);
+		player.position.x = contactPoint.x + directionVector.x * (player.radius + 1.0f);
+		player.position.y = contactPoint.y + directionVector.y * (player.radius + 1.0f);
 
 		//norlmalVector.x = contactPoint.x - enemy.position.x;
 		//norlmalVector.y = contactPoint.y - enemy.position.y;
@@ -199,6 +204,13 @@ Vector2f PushBack(Player player, Enemy enemy) {
 	return reflection;
 }
 
+/// <summary>
+/// 敵の反射処理
+/// </summary>
+/// <param name="player"></param>
+/// <param name="enemy"></param>
+/// <param name="angle"></param>
+/// <returns></returns>
 float ReflectionVector(Player player, Enemy enemy, float angle) {
 	Vector2f directionVector = {};
 	Vector2f Oligin = { 1.0f, 0.0f };
@@ -240,4 +252,14 @@ float Angle(Vector2f reflection) {
 
 int ToDegree(float radian) {
 	return (int)(radian * 180.0f / M_PI);
+}
+
+/// <summary>
+/// プレイヤーの初期化
+/// </summary>
+/// <param name="player"></param>
+void PlayerInitialization(Player& player) {
+	player.isAlive = true;
+	player.position = { 300, 100 };
+	player.remain = 3;
 }
