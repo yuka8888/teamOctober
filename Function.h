@@ -13,6 +13,10 @@ struct Vector2f {
 
 struct Player {
 	Vector2f position;
+	Vector2 topMapPosition;
+	Vector2 bottomMapPosition;
+	Vector2 leftMapPosition;
+	Vector2 rightMapPosition;
 	Vector2f speed;
 	Vector2f acceleration;
 	int size;
@@ -29,6 +33,7 @@ struct SafeZone {
 	float size;
 };
 
+
 struct Enemy {
 	Vector2f position;
 	float size;
@@ -37,7 +42,6 @@ struct Enemy {
 	Vector2f linePosition[8];
 	int radius = 32;
 };
-
 
 enum Scene {
 	TITLE,
@@ -66,7 +70,7 @@ bool Collision(Player player, SafeZone safeZone) {
 	x = player.position.x - safeZone.position.x;
 	y = player.position.y - safeZone.position.y;
 
-	if ((player.radius+ safeZone.size / 2.0f) * (player.radius + safeZone.size / 2.0f) >= x * x + y * y) {
+	if ((player.radius + (safeZone.size / 2.0f - 25)) * (player.radius + (safeZone.size / 2.0f - 25)) >= x * x + y * y) {
 		return true;
 	}
 
@@ -168,6 +172,9 @@ Vector2f PushBack(Player player, Enemy enemy) {
 	float x = 0.0f;
 	float y = 0.0f;
 
+	player.position.x += player.speed.x;
+	player.position.y += player.speed.y;
+
 	x = (player.position.x) - (enemy.position.x);
 	y = (player.position.y) - (enemy.position.y);
 	Length({ x,y });
@@ -185,8 +192,8 @@ Vector2f PushBack(Player player, Enemy enemy) {
 		contactPoint.x = directionVector.x * (enemy.radius) + enemy.position.x;
 		contactPoint.y = directionVector.y * (enemy.radius) + enemy.position.y;
 
-		player.position.x = contactPoint.x + directionVector.x * (player.radius + 1.0f);
-		player.position.y = contactPoint.y + directionVector.y * (player.radius + 1.0f);
+		player.position.x = contactPoint.x + directionVector.x * (player.radius + 2.0f);
+		player.position.y = contactPoint.y + directionVector.y * (player.radius + 2.0f);
 
 		//norlmalVector.x = contactPoint.x - enemy.position.x;
 		//norlmalVector.y = contactPoint.y - enemy.position.y;
@@ -233,10 +240,10 @@ float ReflectionVector(Player player, Enemy enemy, float angle) {
 	provisionalPosition.x = player.position.x + (cosf(theta * 3.1415f) * (player.size / 2.0f));
 	provisionalPosition.y = player.position.y + (sinf(theta * 3.1415f) * (player.size / 2.0f));
 
-	float x = ((provisionalPosition.x + player.size / 2.0f) - (enemy.position.x + enemy.size / 2.0f));
-	float y = ((provisionalPosition.y + player.size / 2.0f) - (enemy.position.y + enemy.size / 2.0f));
+	float x = (provisionalPosition.x - enemy.position.x);
+	float y = (provisionalPosition.y - enemy.position.y);
 
-	if ((player.size / 2.0f + enemy.size / 2.0f) * (player.size / 2.0f + enemy.size / 2.0f) >= x * x + y * y) {
+	if (Length({ x,y }) <= player.radius + enemy.radius) {
 		theta -= angle * 2;
 
 		return theta;
@@ -260,6 +267,6 @@ int ToDegree(float radian) {
 /// <param name="player"></param>
 void PlayerInitialization(Player& player) {
 	player.isAlive = true;
-	player.position = { 300, 100 };
+	player.position = { 300, 600 };
 	player.remain = 3;
 }
